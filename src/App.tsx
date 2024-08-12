@@ -1,33 +1,60 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { useState } from 'react';
+import './App.css';
+import { Products } from './components/Products';
+import Cart from './components/Cart';
+import { CartItem } from './models/CartItem';
+import { CartContext, ICartContext } from './contexts/CartContexts';
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [cart, setCart] = useState<ICartContext>({
+    cartProducts: [],
+    add: () => { },
+    remove: () => { }
+  })
+  const products = [{ id: 1, title: "dress", price: 123 }, { id: 2, title: "t-shirt", price: 183 }];
 
+  cart.add = (id: number) => {
+    const p = cart.cartProducts.find(p => p.product.id === id)
+    if (!p) {
+      const foundProduct = products.find(p => p.id === id)
+      if (foundProduct) {
+        const updatedCart = { ...cart, cartProducts: [...cart.cartProducts, new CartItem(foundProduct, 1)] }
+        setCart(updatedCart)
+        localStorage.setItem("cart", JSON.stringify(updatedCart))
+      }
+    } else {
+
+      const updatedCartItems: CartItem[] = cart.cartProducts.map(ci => {
+        if (ci.product.id === id) {
+          return { ...ci, amount: ci.amount + 1 }
+        }
+        else {
+          return ci;
+        }
+
+      }
+
+      )
+      setCart({ ...cart, cartProducts: updatedCartItems });
+      localStorage.setItem("cart", JSON.stringify(updatedCartItems))
+
+    }
+
+  }
   return (
     <>
-      <div>
-        <a href="https://vitejs.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
+
+      <CartContext.Provider value={cart}>
+
+        <Products>
+
+        </Products>
+
+        <Cart></Cart>
+
+      </CartContext.Provider>
+
+
     </>
   )
 }
